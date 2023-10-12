@@ -16,6 +16,8 @@ import cz.muni.fi.pv168.project.ui.panels.RecipeTablePanel;
 import cz.muni.fi.pv168.project.ui.panels.UnitTablePanel;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -25,6 +27,8 @@ public class MainWindow {
     private final Action deleteAction;
     private final Action editAction;
     private final Action openAction;
+
+    private int currentTabIndex;
 
     public MainWindow() {
         frame = createFrame();
@@ -59,18 +63,57 @@ public class MainWindow {
         openAction = new OpenAction(recipeTablePanel.getTable());
         openAction.setEnabled(false);
 
+        // Add popup menu, toolbar, menubar
+        recipeTablePanel.getTable().setComponentPopupMenu(createRecipeTablePopupMenu());
+        frame.add(createToolbar(), BorderLayout.BEFORE_FIRST_LINE);
+        frame.setJMenuBar(createMenuBar());
+
         // Add the panels to tabbed pane
         var tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Recipes", recipeTablePanel);
         tabbedPane.addTab("Ingredients", ingredientTablePanel);
         tabbedPane.addTab("Categories", categoryTablePanel);
         tabbedPane.addTab("Units", unitTablePanel);
+        currentTabIndex = tabbedPane.getSelectedIndex();
+        System.out.println("Default start tab: " + tabbedPane.getTitleAt(currentTabIndex));
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int nextSelectedIndex = tabbedPane.getSelectedIndex();
+                System.out.println(tabbedPane.getTitleAt(currentTabIndex)
+                    + " --> " + tabbedPane.getTitleAt(nextSelectedIndex));
+                // TODO what about making only change in actions, not actual button layout?
+
+                JToolBar toolBar = (JToolBar) frame.getContentPane().getComponent(0);
+                toolBar.removeAll();
+                toolBar.revalidate();
+                switch (nextSelectedIndex) {
+                    case 0:
+                        toolBar.add(openAction);
+                        toolBar.add(editAction);
+                        toolBar.add(addAction);
+                        toolBar.add(deleteAction);
+                        break;
+                    case 1:
+                        toolBar.add(openAction);
+                        break;
+                    case 2:
+                        toolBar.add(addAction);
+                        toolBar.add(deleteAction);
+                        break;
+                    default:
+                        toolBar.add(openAction);
+                        toolBar.add(editAction);
+                        break;
+                }
+                toolBar.revalidate();
+
+
+                currentTabIndex = nextSelectedIndex;
+            }
+        });
         frame.add(tabbedPane, BorderLayout.CENTER);
 
-        // Add popup menu, toolbar, menubar
-        recipeTablePanel.getTable().setComponentPopupMenu(createRecipeTablePopupMenu());
-        frame.add(createToolbar(), BorderLayout.BEFORE_FIRST_LINE);
-        frame.setJMenuBar(createMenuBar());
 
         frame.pack();
     }
@@ -113,6 +156,12 @@ public class MainWindow {
         toolbar.add(editAction);
         toolbar.add(addAction);
         toolbar.add(deleteAction);
+        return toolbar;
+    }
+
+    private JToolBar createToolbarIngredient() {
+        var toolbar = new JToolBar();
+        toolbar.add(openAction);
         return toolbar;
     }
 
