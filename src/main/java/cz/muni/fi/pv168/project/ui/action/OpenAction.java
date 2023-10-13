@@ -9,10 +9,12 @@ import java.awt.event.KeyEvent;
 public final class OpenAction extends AbstractAction {
 
     private final JTable recipeTable;
+    private final JFrame jFrame;
 
-    public OpenAction(JTable recipeTable) {
+    public OpenAction(JTable table, JFrame jFrame) {
         super("Open", Icons.OPEN_ICON);
-        this.recipeTable = recipeTable;
+        this.recipeTable = table;
+        this.jFrame = jFrame;
         putValue(SHORT_DESCRIPTION, "Opens recipe");
         putValue(MNEMONIC_KEY, KeyEvent.VK_O);
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("ctrl O"));
@@ -20,6 +22,8 @@ public final class OpenAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO
+        JTabbedPane tabbedPane = (JTabbedPane) this.jFrame.getContentPane().getComponent(1);
+        int currentTab = tabbedPane.getSelectedIndex();
+        System.out.println("Open ---> " + tabbedPane.getTitleAt(currentTab) );
     }
 }

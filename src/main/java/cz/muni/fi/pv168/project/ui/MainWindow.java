@@ -1,7 +1,6 @@
 package cz.muni.fi.pv168.project.ui;
 
 import cz.muni.fi.pv168.project.data.TestDataGenerator;
-import cz.muni.fi.pv168.project.model.*;
 import cz.muni.fi.pv168.project.ui.action.AddAction;
 import cz.muni.fi.pv168.project.ui.action.DeleteAction;
 import cz.muni.fi.pv168.project.ui.action.EditAction;
@@ -19,7 +18,6 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.util.ArrayList;
 
 public class MainWindow {
     private final JFrame frame;
@@ -27,8 +25,6 @@ public class MainWindow {
     private final Action deleteAction;
     private final Action editAction;
     private final Action openAction;
-
-    private int currentTabIndex;
 
     public MainWindow() {
         frame = createFrame();
@@ -55,16 +51,19 @@ public class MainWindow {
 
 
         // Set up actions for recipe table
-        addAction = new AddAction(recipeTablePanel.getTable());
-        deleteAction = new DeleteAction(recipeTablePanel.getTable());
+        addAction = new AddAction(recipeTablePanel.getTable(), frame);
+        deleteAction = new DeleteAction(recipeTablePanel.getTable(), frame);
         deleteAction.setEnabled(false);
-        editAction = new EditAction(recipeTablePanel.getTable());
+        editAction = new EditAction(recipeTablePanel.getTable(), frame);
         editAction.setEnabled(false);
-        openAction = new OpenAction(recipeTablePanel.getTable());
+        openAction = new OpenAction(recipeTablePanel.getTable(), frame);
         openAction.setEnabled(false);
 
         // Add popup menu, toolbar, menubar
-        recipeTablePanel.getTable().setComponentPopupMenu(createRecipeTablePopupMenu());
+        recipeTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu());
+        ingredientTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu());
+        categoryTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu());
+        unitTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu());
         frame.add(createToolbar(), BorderLayout.BEFORE_FIRST_LINE);
         frame.setJMenuBar(createMenuBar());
 
@@ -74,44 +73,18 @@ public class MainWindow {
         tabbedPane.addTab("Ingredients", ingredientTablePanel);
         tabbedPane.addTab("Categories", categoryTablePanel);
         tabbedPane.addTab("Units", unitTablePanel);
+
         currentTabIndex = tabbedPane.getSelectedIndex();
         System.out.println("Default start tab: " + tabbedPane.getTitleAt(currentTabIndex));
-        tabbedPane.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                int nextSelectedIndex = tabbedPane.getSelectedIndex();
-                System.out.println(tabbedPane.getTitleAt(currentTabIndex)
-                    + " --> " + tabbedPane.getTitleAt(nextSelectedIndex));
-                // TODO what about making only change in actions, not actual button layout?
-
-                JToolBar toolBar = (JToolBar) frame.getContentPane().getComponent(0);
-                toolBar.removeAll();
-                toolBar.revalidate();
-                switch (nextSelectedIndex) {
-                    case 0:
-                        toolBar.add(openAction);
-                        toolBar.add(editAction);
-                        toolBar.add(addAction);
-                        toolBar.add(deleteAction);
-                        break;
-                    case 1:
-                        toolBar.add(openAction);
-                        break;
-                    case 2:
-                        toolBar.add(addAction);
-                        toolBar.add(deleteAction);
-                        break;
-                    default:
-                        toolBar.add(openAction);
-                        toolBar.add(editAction);
-                        break;
-                }
-                toolBar.revalidate();
-
-
-                currentTabIndex = nextSelectedIndex;
-            }
-        });
+//        tabbedPane.addChangeListener(new ChangeListener() {
+//            @Override
+//            public void stateChanged(ChangeEvent e) {
+//                int nextSelectedIndex = tabbedPane.getSelectedIndex();
+//                System.out.println(tabbedPane.getTitleAt(currentTabIndex)
+//                    + " --> " + tabbedPane.getTitleAt(nextSelectedIndex));
+//                // TODO what about making only change in actions, not actual button layout?
+//            }
+//        });
         frame.add(tabbedPane, BorderLayout.CENTER);
 
 
@@ -129,7 +102,7 @@ public class MainWindow {
     }
 
 
-    private JPopupMenu createRecipeTablePopupMenu() {
+    private JPopupMenu createTablePopupMenu() {
         var menu = new JPopupMenu();
         menu.add(openAction);
         menu.add(editAction);
@@ -156,12 +129,6 @@ public class MainWindow {
         toolbar.add(editAction);
         toolbar.add(addAction);
         toolbar.add(deleteAction);
-        return toolbar;
-    }
-
-    private JToolBar createToolbarIngredient() {
-        var toolbar = new JToolBar();
-        toolbar.add(openAction);
         return toolbar;
     }
 

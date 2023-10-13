@@ -9,10 +9,13 @@ import java.awt.event.KeyEvent;
 public final class EditAction extends AbstractAction {
 
     private final JTable recipeTable;
+    private final JFrame jFrame;
 
-    public EditAction(JTable recipeTable) {
+
+    public EditAction(JTable table, JFrame jFrame) {
         super("Edit", Icons.EDIT_ICON);
-        this.recipeTable = recipeTable;
+        this.recipeTable = table;
+        this.jFrame = jFrame;
         putValue(SHORT_DESCRIPTION, "Edits selected recipe");
         putValue(MNEMONIC_KEY, KeyEvent.VK_E);
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("ctrl E"));
@@ -20,6 +23,8 @@ public final class EditAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO
+        JTabbedPane tabbedPane = (JTabbedPane) this.jFrame.getContentPane().getComponent(1);
+        int currentTab = tabbedPane.getSelectedIndex();
+        System.out.println("Edit ---> " + tabbedPane.getTitleAt(currentTab) );
     }
 }

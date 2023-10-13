@@ -9,10 +9,12 @@ import java.awt.event.KeyEvent;
 public final class DeleteAction extends AbstractAction {
 
     private final JTable recipeTable;
+    private final JFrame jFrame;
 
-    public DeleteAction(JTable employeeTable) {
+    public DeleteAction(JTable table, JFrame jFrame) {
         super("Delete", Icons.DELETE_ICON);
-        this.recipeTable = employeeTable;
+        this.recipeTable = table;
+        this.jFrame = jFrame;
         putValue(SHORT_DESCRIPTION, "Deletes selected recipes");
         putValue(MNEMONIC_KEY, KeyEvent.VK_D);
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke("ctrl D"));
@@ -20,6 +22,8 @@ public final class DeleteAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO
+        JTabbedPane tabbedPane = (JTabbedPane) this.jFrame.getContentPane().getComponent(1);
+        int currentTab = tabbedPane.getSelectedIndex();
+        System.out.println("Delete ---> " + tabbedPane.getTitleAt(currentTab) );
     }
 }
