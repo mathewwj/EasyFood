@@ -74,17 +74,16 @@ public class MainWindow {
         tabbedPane.addTab("Categories", categoryTablePanel);
         tabbedPane.addTab("Units", unitTablePanel);
 
-        currentTabIndex = tabbedPane.getSelectedIndex();
-        System.out.println("Default start tab: " + tabbedPane.getTitleAt(currentTabIndex));
-//        tabbedPane.addChangeListener(new ChangeListener() {
-//            @Override
-//            public void stateChanged(ChangeEvent e) {
-//                int nextSelectedIndex = tabbedPane.getSelectedIndex();
-//                System.out.println(tabbedPane.getTitleAt(currentTabIndex)
-//                    + " --> " + tabbedPane.getTitleAt(nextSelectedIndex));
-//                // TODO what about making only change in actions, not actual button layout?
-//            }
-//        });
+
+        tabbedPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                recipeTablePanel.getTable().clearSelection();
+                ingredientTablePanel.getTable().clearSelection();
+                unitTablePanel.getTable().clearSelection();
+                categoryTablePanel.getTable().clearSelection();
+            }
+        });
         frame.add(tabbedPane, BorderLayout.CENTER);
 
 

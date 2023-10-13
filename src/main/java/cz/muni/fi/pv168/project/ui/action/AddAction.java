@@ -8,7 +8,7 @@ import java.awt.event.KeyEvent;
 
 public final class AddAction extends AbstractAction {
 
-    private final JTable table;
+    private JTable table;
     private final JFrame jFrame;
 
     public AddAction(JTable table, JFrame jFrame) {
@@ -24,6 +24,9 @@ public final class AddAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         JTabbedPane tabbedPane = (JTabbedPane) this.jFrame.getContentPane().getComponent(1);
         int currentTab = tabbedPane.getSelectedIndex();
+        JPanel panel = (JPanel) tabbedPane.getComponentAt(currentTab);
+        JScrollPane scrollPane = (JScrollPane) panel.getComponent(0);
+        this.table = (JTable) scrollPane.getViewport().getView();
         System.out.println("Add ---> " + tabbedPane.getTitleAt(currentTab) );
     }
 }
