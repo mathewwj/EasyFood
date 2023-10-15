@@ -8,12 +8,11 @@ import java.awt.event.KeyEvent;
 
 public final class AddAction extends AbstractAction {
 
-    private JTable table;
+    private JTable table = null;
     private final JFrame jFrame;
 
-    public AddAction(JTable table, JFrame jFrame) {
+    public AddAction(JFrame jFrame) {
         super("Add", Icons.ADD_ICON);
-        this.table = table;
         this.jFrame = jFrame;
         putValue(SHORT_DESCRIPTION, "Adds new recipe");
         putValue(MNEMONIC_KEY, KeyEvent.VK_A);
@@ -28,5 +27,7 @@ public final class AddAction extends AbstractAction {
         JScrollPane scrollPane = (JScrollPane) panel.getComponent(0);
         this.table = (JTable) scrollPane.getViewport().getView();
         System.out.println("Add ---> " + tabbedPane.getTitleAt(currentTab) );
+
+        System.out.println(this.table.getColumnName(0));
     }
 }

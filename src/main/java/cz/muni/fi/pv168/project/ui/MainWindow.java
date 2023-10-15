@@ -51,7 +51,7 @@ public class MainWindow {
 
 
         // Set up actions for recipe table
-        addAction = new AddAction(recipeTablePanel.getTable(), frame);
+        addAction = new AddAction(frame);
         deleteAction = new DeleteAction(recipeTablePanel.getTable(), frame);
         deleteAction.setEnabled(false);
         editAction = new EditAction(recipeTablePanel.getTable(), frame);
@@ -82,6 +82,13 @@ public class MainWindow {
                 ingredientTablePanel.getTable().clearSelection();
                 unitTablePanel.getTable().clearSelection();
                 categoryTablePanel.getTable().clearSelection();
+
+                int currentTab = tabbedPane.getSelectedIndex();
+
+                addAction.setEnabled(true);
+                editAction.setEnabled(false);
+                deleteAction.setEnabled(false);
+                openAction.setEnabled(currentTab == 1);
             }
         });
         frame.add(tabbedPane, BorderLayout.CENTER);
