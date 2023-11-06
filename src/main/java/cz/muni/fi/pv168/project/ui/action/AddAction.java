@@ -7,10 +7,7 @@ import cz.muni.fi.pv168.project.ui.dialog.AddCategoryDialog;
 import cz.muni.fi.pv168.project.ui.dialog.AddIngredientDialog;
 import cz.muni.fi.pv168.project.ui.dialog.AddRecipeDialog;
 import cz.muni.fi.pv168.project.ui.dialog.AddUnitDialog;
-import cz.muni.fi.pv168.project.ui.model.CategoryTableModel;
-import cz.muni.fi.pv168.project.ui.model.IngredientTableModel;
-import cz.muni.fi.pv168.project.ui.model.RecipeTableModel;
-import cz.muni.fi.pv168.project.ui.model.UnitTableModel;
+import cz.muni.fi.pv168.project.ui.model.*;
 import cz.muni.fi.pv168.project.ui.resources.Icons;
 
 import javax.swing.*;
@@ -24,9 +21,9 @@ public final class AddAction extends GeneralAction {
 
     private final List<Ingredient> ingredients;
     private final List<Unit> units;
-    private final UnitTableModel unitTableModel;
+    private final GeneralTableModel<Unit> unitTableModel;
 
-    public AddAction(List<Category> categories, List<Ingredient> ingredients, List<Unit> units, UnitTableModel unitTableModel) {
+    public AddAction(List<Category> categories, List<Ingredient> ingredients, List<Unit> units, GeneralTableModel<Unit> unitTableModel) {
         super("Add", Icons.ADD_ICON);
         this.categories = categories;
         this.ingredients = ingredients;

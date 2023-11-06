@@ -4,15 +4,13 @@ import cz.muni.fi.pv168.project.data.TestDataGenerator;
 import cz.muni.fi.pv168.project.model.Category;
 import cz.muni.fi.pv168.project.model.Ingredient;
 import cz.muni.fi.pv168.project.model.Recipe;
+import cz.muni.fi.pv168.project.model.Unit;
 import cz.muni.fi.pv168.project.ui.action.*;
 import cz.muni.fi.pv168.project.ui.filters.RecipeTableFilter;
 import cz.muni.fi.pv168.project.ui.filters.components.FilterListModelBuilder;
 import cz.muni.fi.pv168.project.ui.filters.values.SpecialFilterCategoryValues;
 import cz.muni.fi.pv168.project.ui.filters.values.SpecialFilterIngredientValues;
-import cz.muni.fi.pv168.project.ui.model.CategoryTableModel;
-import cz.muni.fi.pv168.project.ui.model.IngredientTableModel;
-import cz.muni.fi.pv168.project.ui.model.RecipeTableModel;
-import cz.muni.fi.pv168.project.ui.model.UnitTableModel;
+import cz.muni.fi.pv168.project.ui.model.*;
 import cz.muni.fi.pv168.project.ui.panels.*;
 import cz.muni.fi.pv168.project.ui.rangeSlider.RangeSlider;
 import cz.muni.fi.pv168.project.ui.rangeSlider.RecipeRangeSliderChangeListener;
@@ -36,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 
 public class MainWindow {
@@ -68,30 +65,27 @@ public class MainWindow {
         var units = testDataGenerator.createTestUnits(5);
         var recipes = testDataGenerator.createTestRecipes(20, categories, ingredients, units);
 
-        // Create models
-        RecipeTableModel recipeTableModel = new RecipeTableModel(recipes);
-        IngredientTableModel ingredientTableModel = new IngredientTableModel(ingredients);
-        CategoryTableModel categoryTableModel = new CategoryTableModel(categories);
-        UnitTableModel unitTableModel = new UnitTableModel(units);
-        List<AbstractTableModel> tableModels =
+        GeneralTableModel<Recipe> recipeTableModel = new GeneralTableModel<>(recipes);
+        GeneralTableModel<Ingredient> ingredientTableModel = new GeneralTableModel<>(ingredients);
+        GeneralTableModel<Category> categoryTableModel = new GeneralTableModel<>(categories);
+        GeneralTableModel<Unit> unitTableModel = new GeneralTableModel<>(units);
+        List<GeneralTableModel<?>> tableModels =
                 List.of(recipeTableModel, ingredientTableModel, categoryTableModel, unitTableModel);
 
+        // Create panels
         List<TablePanel> tablePanels = new ArrayList<>();
         for (var tableModel: tableModels) {
             tablePanels.add(new TablePanel(tableModel, this::changeActionsState));
         }
 
-        // Create panels
         var recipeTablePanel = tablePanels.get(TablePanelType.RECIPE.ordinal());
         var ingredientTablePanel = tablePanels.get(TablePanelType.INGREDIENT.ordinal());
         var categoryTablePanel = tablePanels.get(TablePanelType.CATEGORY.ordinal());
         var unitTablePanel = tablePanels.get(TablePanelType.UNIT.ordinal());
 
-        //
-
         // Add the panels to tabbed pane
         this.tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Recipes", recipeTablePanel);
+        tabbedPane.addTab("Recipes", recipeTablePanel); // TODO -> table panel should have a name
         tabbedPane.addTab("Ingredients", ingredientTablePanel);
         tabbedPane.addTab("Categories", categoryTablePanel);
         tabbedPane.addTab("Units", unitTablePanel);
@@ -117,30 +111,19 @@ public class MainWindow {
         JLabel statusBar = createStatusBar();
         setStatusBarName(statusBar);
 
-        // Add row sorters
-//        List<TableRowSorter<AbstractTableModel>> rowSorters = new ArrayList<>();
-//        for (AbstractTableModel tableModel : tableModels) {
-//            var rowSorter = new TableRowSorter<>(tableModel);
-//            rowSorters.add(rowSorter);
-//        }
         var recipeRowSorter = new TableRowSorter<>(recipeTableModel);
-        var categoryRowSorter = new TableRowSorter<>(categoryTableModel);
-        var ingredientRowSorter = new TableRowSorter<>(ingredientTableModel);
-        var unitRowSorter = new TableRowSorter<>(unitTableModel);
+        var ingredientRowSorter = new TableRowSorter<>(tableModels.get(TablePanelType.INGREDIENT.ordinal()));
+        var categoryRowSorter = new TableRowSorter<>(tableModels.get(TablePanelType.CATEGORY.ordinal()));
+        var unitRowSorter = new TableRowSorter<>(tableModels.get(TablePanelType.UNIT.ordinal()));
 
         // set all row sorters
-//        for (int x = 0; x < tablePanels.size(); x++) {
-//            tablePanels.get(x).getTable().setRowSorter(rowSorters.get(x));
-//        }
         recipeTablePanel.getTable().setRowSorter(recipeRowSorter);
         categoryTablePanel.getTable().setRowSorter(categoryRowSorter);
         ingredientTablePanel.getTable().setRowSorter(ingredientRowSorter);
         unitTablePanel.getTable().setRowSorter(unitRowSorter);
 
-        recipeRowSorter.addRowSorterListener(e -> setStatusBarName(statusBar));
         // adding listener to change text of status bar when filtering rows
-//        rowSorters.get(TablePanelType.RECIPE.ordinal())
-//                .addRowSorterListener(e -> setStatusBarName(statusBar));
+        recipeRowSorter.addRowSorterListener(e -> setStatusBarName(statusBar));
 
         var recipeTableFilter = new RecipeTableFilter(recipeRowSorter);
         var categoryFilter = createCategoryFilter(recipeTableFilter, categoryTableModel);
@@ -196,8 +179,8 @@ public class MainWindow {
     }
 
     private static JComboBox<Either<SpecialFilterCategoryValues, Category>> createCategoryFilter(
-            RecipeTableFilter recipeTableFilter, CategoryTableModel categoryTableModel) {
-        return FilterComboboxBuilder.create(SpecialFilterCategoryValues.class, categoryTableModel.getCategories().toArray(new Category[0]))
+            RecipeTableFilter recipeTableFilter, GeneralTableModel<Category> categoryTableModel) {
+        return FilterComboboxBuilder.create(SpecialFilterCategoryValues.class, categoryTableModel.getEntities().toArray(new Category[0]))
                 .setSelectedItem(SpecialFilterCategoryValues.ALL)
                 .setSpecialValuesRenderer(new SpecialFilterCategoryValuesRenderer())
                 .setValuesRenderer(new CategoryRenderer())
@@ -206,16 +189,16 @@ public class MainWindow {
     }
 
     private static JList<Either<SpecialFilterIngredientValues, Ingredient>> createIngredientFilter(
-            RecipeTableFilter recipeTableFilter, IngredientTableModel ingredientTableModel) {
+            RecipeTableFilter recipeTableFilter, GeneralTableModel<Ingredient> ingredientTableModel) {
         ListModel<Ingredient> listModel = new AbstractListModel<>() {
             @Override
             public int getSize() {
-                return ingredientTableModel.getIngredients().size();
+                return ingredientTableModel.getEntities().size();
             }
 
             @Override
             public Ingredient getElementAt(int index) {
-                return ingredientTableModel.getIngredients().get(index);
+                return ingredientTableModel.getEntities().get(index);
             }
         };
 
@@ -228,11 +211,11 @@ public class MainWindow {
                 .build();
     }
 
-    private static <T>RangeSlider getRangeSlider(RecipeTableModel recipeTableModel,
+    private static <T>RangeSlider getRangeSlider(GeneralTableModel<Recipe> recipeTableModel,
                                                   Consumer<Either<T, Pair<Integer, Integer>>> filterFunction,
                                                   Function<Recipe,Integer> mapperFunction,
                                                   String description) {
-        List<Integer> values = recipeTableModel.getRecipes().stream()
+        List<Integer> values = recipeTableModel.getEntities().stream()
                 .map(mapperFunction)
                 .toList();
 

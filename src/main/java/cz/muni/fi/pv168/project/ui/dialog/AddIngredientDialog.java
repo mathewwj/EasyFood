@@ -2,6 +2,7 @@ package cz.muni.fi.pv168.project.ui.dialog;
 
 import cz.muni.fi.pv168.project.model.Ingredient;
 import cz.muni.fi.pv168.project.model.Unit;
+import cz.muni.fi.pv168.project.ui.model.GeneralTableModel;
 import cz.muni.fi.pv168.project.ui.model.UnitTableModel;
 
 import javax.swing.*;
@@ -10,9 +11,9 @@ public class AddIngredientDialog extends EntityDialog<Ingredient> {
     private final JTextField name = new JTextField();
     private final JTextField nutritionalValue = FieldMaker.makeIntField();
     private final JComboBox<Unit> baseUnit = new JComboBox<>();
-    private final UnitTableModel unitTableModel;
+    private final GeneralTableModel<Unit> unitTableModel;
 
-    public AddIngredientDialog(UnitTableModel unitTableModel) {
+    public AddIngredientDialog(GeneralTableModel<Unit> unitTableModel) {
         this.unitTableModel = unitTableModel;
         setValues();
         addFields();
