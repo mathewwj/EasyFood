@@ -13,10 +13,7 @@ import cz.muni.fi.pv168.project.ui.model.CategoryTableModel;
 import cz.muni.fi.pv168.project.ui.model.IngredientTableModel;
 import cz.muni.fi.pv168.project.ui.model.RecipeTableModel;
 import cz.muni.fi.pv168.project.ui.model.UnitTableModel;
-import cz.muni.fi.pv168.project.ui.panels.CategoryTablePanel;
-import cz.muni.fi.pv168.project.ui.panels.IngredientTablePanel;
-import cz.muni.fi.pv168.project.ui.panels.RecipeTablePanel;
-import cz.muni.fi.pv168.project.ui.panels.UnitTablePanel;
+import cz.muni.fi.pv168.project.ui.panels.*;
 import cz.muni.fi.pv168.project.ui.rangeSlider.RangeSlider;
 import cz.muni.fi.pv168.project.ui.rangeSlider.RecipeRangeSliderChangeListener;
 import cz.muni.fi.pv168.project.ui.renderers.*;
@@ -26,7 +23,6 @@ import cz.muni.fi.pv168.project.ui.filters.components.FilterComboboxBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
@@ -34,12 +30,13 @@ import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 
 public class MainWindow {
@@ -76,12 +73,21 @@ public class MainWindow {
         IngredientTableModel ingredientTableModel = new IngredientTableModel(ingredients);
         CategoryTableModel categoryTableModel = new CategoryTableModel(categories);
         UnitTableModel unitTableModel = new UnitTableModel(units);
+        List<AbstractTableModel> tableModels =
+                List.of(recipeTableModel, ingredientTableModel, categoryTableModel, unitTableModel);
+
+        List<TablePanel> tablePanels = new ArrayList<>();
+        for (var tableModel: tableModels) {
+            tablePanels.add(new TablePanel(tableModel, this::changeActionsState));
+        }
 
         // Create panels
-        var recipeTablePanel = new RecipeTablePanel(recipeTableModel, this::changeActionsState);
-        var ingredientTablePanel = new IngredientTablePanel(ingredientTableModel, this::changeActionsState);
-        var categoryTablePanel = new CategoryTablePanel(categoryTableModel, this::changeActionsState);
-        var unitTablePanel = new UnitTablePanel(unitTableModel, this::changeActionsState);
+        var recipeTablePanel = tablePanels.get(TablePanelType.RECIPE.ordinal());
+        var ingredientTablePanel = tablePanels.get(TablePanelType.INGREDIENT.ordinal());
+        var categoryTablePanel = tablePanels.get(TablePanelType.CATEGORY.ordinal());
+        var unitTablePanel = tablePanels.get(TablePanelType.UNIT.ordinal());
+
+        //
 
         // Add the panels to tabbed pane
         this.tabbedPane = new JTabbedPane();
@@ -106,25 +112,35 @@ public class MainWindow {
 
 
         // Add popup menu, toolbar, menubar, status bar
-        recipeTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu(true));
-        ingredientTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu(false));
-        categoryTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu(false));
-        unitTablePanel.getTable().setComponentPopupMenu(createTablePopupMenu(false));
+        tablePanels.forEach(
+                r -> r.getTable().setComponentPopupMenu(createTablePopupMenu(r.getTablePanelType())));
         JLabel statusBar = createStatusBar();
         setStatusBarName(statusBar);
 
-        // ADD row sorters
+        // Add row sorters
+//        List<TableRowSorter<AbstractTableModel>> rowSorters = new ArrayList<>();
+//        for (AbstractTableModel tableModel : tableModels) {
+//            var rowSorter = new TableRowSorter<>(tableModel);
+//            rowSorters.add(rowSorter);
+//        }
         var recipeRowSorter = new TableRowSorter<>(recipeTableModel);
         var categoryRowSorter = new TableRowSorter<>(categoryTableModel);
         var ingredientRowSorter = new TableRowSorter<>(ingredientTableModel);
         var unitRowSorter = new TableRowSorter<>(unitTableModel);
+
+        // set all row sorters
+//        for (int x = 0; x < tablePanels.size(); x++) {
+//            tablePanels.get(x).getTable().setRowSorter(rowSorters.get(x));
+//        }
         recipeTablePanel.getTable().setRowSorter(recipeRowSorter);
         categoryTablePanel.getTable().setRowSorter(categoryRowSorter);
         ingredientTablePanel.getTable().setRowSorter(ingredientRowSorter);
         unitTablePanel.getTable().setRowSorter(unitRowSorter);
 
-        // adding listener to change text of status bar when filtering rows
         recipeRowSorter.addRowSorterListener(e -> setStatusBarName(statusBar));
+        // adding listener to change text of status bar when filtering rows
+//        rowSorters.get(TablePanelType.RECIPE.ordinal())
+//                .addRowSorterListener(e -> setStatusBarName(statusBar));
 
         var recipeTableFilter = new RecipeTableFilter(recipeRowSorter);
         var categoryFilter = createCategoryFilter(recipeTableFilter, categoryTableModel);
@@ -169,13 +185,10 @@ public class MainWindow {
                 setToDefaultActionEnablement(getCurrentTableIndex(tabPanel));
 
                 // clear all row selections
-                recipeTablePanel.getTable().clearSelection();
-                ingredientTablePanel.getTable().clearSelection();
-                unitTablePanel.getTable().clearSelection();
-                categoryTablePanel.getTable().clearSelection();
+                tablePanels.forEach(r -> r.getTable().clearSelection());
 
                 int currTabIndex = tabPanel.getSelectedIndex();
-                filtersToolbar.setVisible(currTabIndex == 0); // first is recipe
+                filtersToolbar.setVisible(currTabIndex == TablePanelType.RECIPE.ordinal()); // first is recipe
 
                 setStatusBarName(statusBar);
             }
@@ -254,14 +267,15 @@ public class MainWindow {
         return frame;
     }
 
-    private JPopupMenu createTablePopupMenu(boolean isRecipe) {
+    private JPopupMenu createTablePopupMenu(TablePanelType tablePanelType) {
         var menu = new JPopupMenu();
         menu.add(addAction);
         menu.add(editAction);
         menu.add(deleteAction);
         menu.add(openAction);
 
-        if (isRecipe) { // only recipe has export possibility
+        // only recipe has export possibility
+        if (tablePanelType == TablePanelType.RECIPE) {
             menu.addSeparator();
            	menu.add(importAction);
        	 	menu.add(exportAction);
@@ -358,8 +372,12 @@ public class MainWindow {
         for (var action: this.actions) {
             this.forbiddenActionsInTabs.put(action, List.of());
         }
-        this.forbiddenActionsInTabs.put(exportAction, List.of(1, 2, 3));
-        this.forbiddenActionsInTabs.put(importAction, List.of(1, 2, 3));
+        List<Integer> forbidden = List.of(
+                TablePanelType.INGREDIENT.ordinal(),
+                TablePanelType.CATEGORY.ordinal(),
+                TablePanelType.UNIT.ordinal());
+        this.forbiddenActionsInTabs.put(exportAction, forbidden);
+        this.forbiddenActionsInTabs.put(importAction, forbidden);
     }
 
     /**
